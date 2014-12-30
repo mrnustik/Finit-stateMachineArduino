@@ -23,7 +23,7 @@ Command			lastCommand;
 
 
 #define Debug	Serial
-#define DEBUG	1
+#define DEBUG	true
 
 
 void debugLog(String message){
