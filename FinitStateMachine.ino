@@ -19,11 +19,11 @@ typedef struct
 
 
 int				statesTable[6][5] = { { 2, 6, 6, 6, 6 },	//WAITING_STATE
-									{ 6, 2, 3, 6, 5 },		//READ_ELEMENT_NAME_STATE
-									{ 6, 3, 6, 4, 6 },		//READ_ATTRIBUTE_NAME_STATE
-									{ 6, 4, 3, 6, 5 },		//READ_ATTRIBUTE_VALUE_STATE
-									{ 2, 1, 1, 1, 1 },		//HANDLE_DATA_STATE
-									{ 6, 6, 6, 6, 6 } };	//ERROR_STATE
+						{ 6, 2, 3, 6, 5 },		//READ_ELEMENT_NAME_STATE
+						{ 6, 3, 6, 4, 6 },		//READ_ATTRIBUTE_NAME_STATE
+						{ 6, 4, 3, 6, 5 },		//READ_ATTRIBUTE_VALUE_STATE
+						{ 2, 1, 1, 1, 1 },		//HANDLE_DATA_STATE
+						{ 6, 6, 6, 6, 6 } };	//ERROR_STATE
 
 
 
