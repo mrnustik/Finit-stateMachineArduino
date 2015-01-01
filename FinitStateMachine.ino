@@ -19,11 +19,11 @@ typedef struct
 
 
 int				statesTable[6][5] = { { 2, 6, 6, 6, 6 },	//WAITING_STATE
-						{ 6, 2, 3, 6, 5 },		//READ_ELEMENT_NAME_STATE
-						{ 6, 3, 6, 4, 6 },		//READ_ATTRIBUTE_NAME_STATE
-						{ 6, 4, 3, 6, 5 },		//READ_ATTRIBUTE_VALUE_STATE
-						{ 2, 1, 1, 1, 1 },		//HANDLE_DATA_STATE
-						{ 6, 6, 6, 6, 6 } };	//ERROR_STATE
+									{ 6, 2, 3, 6, 5 },		//READ_ELEMENT_NAME_STATE
+									{ 6, 3, 6, 4, 6 },		//READ_ATTRIBUTE_NAME_STATE
+									{ 6, 4, 3, 6, 5 },		//READ_ATTRIBUTE_VALUE_STATE
+									{ 1, 1, 1, 1, 1 },		//HANDLE_DATA_STATE
+									{ 6, 6, 6, 6, 6 } };	//ERROR_STATE
 
 
 
@@ -33,7 +33,7 @@ int				currentState = 1;
 char			lastReadChar;
 
 #define Debug						Serial
-#define DEBUG						true
+#define DEBUG_MODE					true
 
 
 #define WAITING_STATE				1
@@ -46,11 +46,18 @@ char			lastReadChar;
 
 
 void debugLog(String message){
-	if (DEBUG) {
+	if (DEBUG_MODE) {
 		Debug.println("DEBUG: " + message);
 	}
 }
 
+void handleData(){
+	
+	//Handle data from your command here.
+	//if(lastCommand == "test"){
+	//	doSomething();
+	//}
+}
 
 int getNextState(){
 	int tableColumn;
@@ -85,7 +92,7 @@ int getNextState(){
 
 
 void act(){
-
+	debugLog("Acting");
 	if (READ_ELEMENT_NAME_STATE == currentState){
 		if (lastReadChar == '<'){
 			lastCommand.elementName = "";
@@ -93,8 +100,10 @@ void act(){
 		else {
 			lastCommand.elementName += lastReadChar;
 		}
+		debugLog("currentState = READ_ELEMENT_NAME_STATE");
 	}
 	else if(READ_ATTRIBUTE_NAME_STATE == currentState) {
+		
 		if (lastReadChar == ' '){
 			lastCommand.attributeCount++;
 			lastCommand.attributes[lastCommand.attributeCount - 1].attributeName = "";
@@ -102,14 +111,33 @@ void act(){
 		else {
 			lastCommand.attributes[lastCommand.attributeCount - 1].attributeName += lastReadChar;
 		}
+		debugLog("currentState = READ_ATTRIBUTE_NAME_STATE");
 	}
 	else if (READ_ATTRIBUTE_VALUE_STATE == currentState){
-		if (lastReadChar == '='){
-			lastCommand.attributes[lastCommand.attributeCount - 1].attributeValue = "";
+		if (lastCommand.attributes[lastCommand.attributeCount - 1].attributeName.length > 0){
+			if (lastReadChar == '='){
+				lastCommand.attributes[lastCommand.attributeCount - 1].attributeValue = "";
+			}
+			else {
+				lastCommand.attributes[lastCommand.attributeCount - 1].attributeValue += lastReadChar;
+			}
+			debugLog("currentState = READ_ATTRIBUTE_VALUE_STATE");
+		}
+		else{
+			currentState = ERROR_STATE;
+		}
+		
+	}
+	else if (HANDLE_DATA_STATE == currentState){
+		
+		if (lastCommand.elementName.length > 0){
+			handleData();
+			debugLog("currentState = HANDLE_DATA_STATE");
 		}
 		else {
-			lastCommand.attributes[lastCommand.attributeCount - 1].attributeValue += lastReadChar;
+			currentState = ERROR_STATE;
 		}
+		
 	}
 
 }
@@ -122,7 +150,7 @@ void setup()
 	while (!Debug.available()){
 	}
 	
-	debugLog("The board has started.");
+	debugLog("The board is ready.");
 }
 
 
@@ -134,10 +162,12 @@ void loop()
 		debugLog("Bluetooth connected");
 
 		lastReadChar = Bluetooth.read();	//gets character
+		debugLog("Character read");
 
 		currentState = getNextState();		//checks character and get state of it
+		debugLog("currentStatedID = " + currentState);
 
-		//act();								//acts according to current state
+		act();								//acts according to current state
 	}
 
 }
