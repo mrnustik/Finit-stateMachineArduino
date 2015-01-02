@@ -75,9 +75,6 @@ void handleData(){
 
 	
 
-	
-	
-	
 	currentState = WAITING_STATE; // Handling done now waiting again
 
 }
