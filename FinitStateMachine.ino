@@ -11,14 +11,14 @@ typedef struct{
 typedef struct
 {
 	String		elementName;
-	Attribute*	attributes;
+	Attribute	attributes[2];
 	int			attributeCount;
 
 } Command;
 
 
 
-int				statesTable[6][5] = { { 2, 6, 6, 6, 6 },	//WAITING_STATE
+int				statesTable[6][5] = { { 2, 1, 1, 1, 1 },	//WAITING_STATE
 									{ 6, 2, 3, 6, 5 },		//READ_ELEMENT_NAME_STATE
 									{ 6, 3, 6, 4, 6 },		//READ_ATTRIBUTE_NAME_STATE
 									{ 6, 4, 3, 6, 5 },		//READ_ATTRIBUTE_VALUE_STATE
@@ -45,18 +45,35 @@ char			lastReadChar;
 
 
 
-void debugLog(String message){
-	if (DEBUG_MODE) {
-		Debug.println("DEBUG: " + message);
-	}
+
+
+void debugCommandLog(){
+	Serial.println("Debugging last command");
+	Serial.print("elementName = ");
+	Serial.println(lastCommand.elementName);
+	Serial.print("attributesCount = ");
+	Serial.println(lastCommand.attributeCount);
+        if(lastCommand.attributeCount > 0){
+          int i = 0;
+          for(i = 0; i < lastCommand.attributeCount;i++){
+            Serial.print("attribute position = ");
+            Serial.println(i);
+            Serial.print("attributeName = ");
+            Serial.println(lastCommand.attributes[i].attributeName);
+            Serial.print("attributeValue = ");
+            Serial.println(lastCommand.attributes[i].attributeValue);
+          }
+        }
 }
 
 void handleData(){
-	
+	debugCommandLog();
 	//Handle data from your command here.
 	//if(lastCommand == "test"){
 	//	doSomething();
 	//}
+
+        currentState = WAITING_STATE; // Handling done now waiting again
 }
 
 int getNextState(){
@@ -81,18 +98,21 @@ int getNextState(){
 		tableColumn = 4;
 	}
 	else {
-		return ERROR_STATE;
+		return WAITING_STATE;
 	}
 	
 
-	debugLog("Getting state frm state table " + tableRow + ' ' + tableColumn);
+	Serial.print("Getting state frm state table ");
+	Serial.print(tableRow);
+	Serial.print(' ');
+	Serial.println(tableColumn);
 
 	return statesTable[tableRow][tableColumn];
 }
 
 
 void act(){
-	debugLog("Acting");
+	Serial.println("Acting");
 	if (READ_ELEMENT_NAME_STATE == currentState){
 		if (lastReadChar == '<'){
 			lastCommand.elementName = "";
@@ -100,7 +120,7 @@ void act(){
 		else {
 			lastCommand.elementName += lastReadChar;
 		}
-		debugLog("currentState = READ_ELEMENT_NAME_STATE");
+		Serial.println("currentState = READ_ELEMENT_NAME_STATE");
 	}
 	else if(READ_ATTRIBUTE_NAME_STATE == currentState) {
 		
@@ -111,17 +131,17 @@ void act(){
 		else {
 			lastCommand.attributes[lastCommand.attributeCount - 1].attributeName += lastReadChar;
 		}
-		debugLog("currentState = READ_ATTRIBUTE_NAME_STATE");
+		Serial.println("currentState = READ_ATTRIBUTE_NAME_STATE");
 	}
 	else if (READ_ATTRIBUTE_VALUE_STATE == currentState){
-		if (lastCommand.attributes[lastCommand.attributeCount - 1].attributeName.length > 0){
+		if (lastCommand.attributes[lastCommand.attributeCount - 1].attributeName.length()> 0){
 			if (lastReadChar == '='){
 				lastCommand.attributes[lastCommand.attributeCount - 1].attributeValue = "";
 			}
 			else {
 				lastCommand.attributes[lastCommand.attributeCount - 1].attributeValue += lastReadChar;
 			}
-			debugLog("currentState = READ_ATTRIBUTE_VALUE_STATE");
+			Serial.println("currentState = READ_ATTRIBUTE_VALUE_STATE");
 		}
 		else{
 			currentState = ERROR_STATE;
@@ -130,9 +150,9 @@ void act(){
 	}
 	else if (HANDLE_DATA_STATE == currentState){
 		
-		if (lastCommand.elementName.length > 0){
+		if (lastCommand.elementName.length() > 0){
 			handleData();
-			debugLog("currentState = HANDLE_DATA_STATE");
+			Serial.println("currentState = HANDLE_DATA_STATE");
 		}
 		else {
 			currentState = ERROR_STATE;
@@ -146,11 +166,10 @@ void setup()
 {
 	Bluetooth.begin(9600);
 
-	Debug.begin(57600);
-	while (!Debug.available()){
-	}
-	
-	debugLog("The board is ready.");
+	Serial.begin(19200);
+
+
+	Serial.println("The board is ready.");
 }
 
 
@@ -159,13 +178,16 @@ void loop()
 	
 
 	if (Bluetooth.available()){
-		debugLog("Bluetooth connected");
+		Serial.println("Bluetooth available");
 
 		lastReadChar = Bluetooth.read();	//gets character
-		debugLog("Character read");
+		Serial.print("lastReadChar = ");
+                Serial.println(lastReadChar);
+  
 
 		currentState = getNextState();		//checks character and get state of it
-		debugLog("currentStatedID = " + currentState);
+		Serial.print("currentStatedID = ");
+		Serial.println(currentState);
 
 		act();								//acts according to current state
 	}
