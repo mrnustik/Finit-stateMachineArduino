@@ -12,7 +12,7 @@ typedef struct
 {
 	String		elementName;
 	Attribute	attributes[2];
-	int			attributeCount;
+	int			attributeCount;       
 
 } Command;
 
