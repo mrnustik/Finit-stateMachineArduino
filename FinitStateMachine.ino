@@ -73,7 +73,13 @@ void handleData(){
 	//	doSomething();
 	//}
 
-        currentState = WAITING_STATE; // Handling done now waiting again
+	
+
+	
+	
+	
+	currentState = WAITING_STATE; // Handling done now waiting again
+
 }
 
 int getNextState(){
